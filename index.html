@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalkulator Subnet &amp; VLSM IPv4 — SMK TKJ</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans / Inter untuk UI & JetBrains Mono untuk IP/Biner -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            royal: {
+              50: '#fff1f5',
+              100: '#ffe4ec',
+              200: '#fecdd9',
+              300: '#fda4ba',
+              400: '#fb7194',
+              500: '#f43f6e',
+              600: '#be185d',
+              700: '#9d174d',
+              800: '#831843',
+              900: '#500724',
+              950: '#2d0615',
+            }
+          }
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* Slider Range Kustom dengan Palet Royal Rose Berwibawa */
+    input[type="range"].subnet-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].subnet-slider::-webkit-slider-runnable-track {
+      height: 0.5rem;
+      border-radius: 9999px;
+    }
+    input[type="range"].subnet-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 1.25rem;
+      width: 1.25rem;
+      border-radius: 9999px;
+      background: #be185d;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(190, 24, 93, 0.45);
+      margin-top: -0.375rem;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    input[type="range"].subnet-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+      background: #9d174d;
+    }
+    .dark input[type="range"].subnet-slider::-webkit-slider-thumb {
+      border-color: #181116;
+      background: #f43f6e;
+    }
+    input[type="range"].subnet-slider::-moz-range-thumb {
+      height: 1.25rem;
+      width: 1.25rem;
+      border-radius: 9999px;
+      background: #be185d;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(190, 24, 93, 0.45);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    .dark input[type="range"].subnet-slider::-moz-range-thumb {
+      border-color: #181116;
+      background: #f43f6e;
+    }
+  </style>
+</head>
+<body class="bg-[#fcf8fa] text-slate-800 dark:bg-[#0e0a0c] dark:text-slate-100 font-sans antialiased transition-colors duration-200 min-h-screen flex flex-col">
+
+  <!-- Garis Aksen Atas Berwibawa -->
+  <div class="h-1 w-full bg-gradient-to-r from-royal-800 via-royal-600 to-rose-500"></div>
+
+  <!-- Header / Navbar -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-[#140e12]/90 backdrop-blur-md border-b border-rose-200/70 dark:border-rose-950/80">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-royal-700 to-royal-600 dark:from-royal-600 dark:to-rose-600 flex items-center justify-center text-white shadow-md shadow-royal-700/25 shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="16" y="16" width="6" height="6" rx="1"></rect>
+            <rect x="2" y="16" width="6" height="6" rx="1"></rect>
+            <rect x="9" y="2" width="6" height="6" rx="1"></rect>
+            <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path>
+            <path d="M12 12V8"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="font-display text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Kalkulator Subnet &amp; VLSM
+            </h1>
+            <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-royal-50 text-royal-700 dark:bg-royal-950/90 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80">
+              IPv4 &bull; RFC 3021
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+            Instrumen analisis pengalamatan jaringan &amp; alokasi VLSM standar SMK TKJ
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <nav class="flex p-1 rounded-xl bg-rose-100/70 dark:bg-rose-950/60 border border-rose-200/80 dark:border-rose-900/70" role="tablist" aria-label="Mode Kalkulator">
+          <button
+            id="tabSubnetBtn"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            class="px-3.5 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-royal-700 text-white shadow-sm"
+          >
+            Subnet
+          </button>
+          <button
+            id="tabVlsmBtn"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            class="px-3.5 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-royal-700 dark:hover:text-rose-300"
+          >
+            VLSM
+          </button>
+        </nav>
+
+        <button
+          id="themeToggle"
+          type="button"
+          aria-label="Ubah tema tampilan"
+          class="p-2.5 rounded-xl border border-rose-200/80 dark:border-rose-900/70 bg-white hover:bg-rose-50 dark:bg-[#1b1217] dark:hover:bg-rose-950/60 text-slate-600 dark:text-rose-200 transition-colors focus:outline-none focus:ring-2 focus:ring-royal-600"
+        >
+          <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path><path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path><path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+          <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Konten Utama -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- PANEL 1: MODE SUBNETTING -->
+    <div id="panelSubnet" class="space-y-6">
+      <section class="bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 shadow-sm p-5 sm:p-6 space-y-5">
+        <div class="flex flex-wrap items-center gap-2 pb-4 border-b border-rose-100 dark:border-rose-950/70">
+          <span class="text-xs font-bold uppercase tracking-wider text-royal-700 dark:text-rose-400 mr-1 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Preset Uji:
+          </span>
+          <button type="button" data-ip="172.16.5.130" data-prefix="25" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-rose-50/80 hover:bg-royal-600 text-royal-800 hover:text-white dark:bg-rose-950/50 dark:hover:bg-royal-600 dark:text-rose-200 dark:hover:text-white border border-rose-200/80 dark:border-rose-900/70 transition-colors">
+            172.16.5.130/25
+          </button>
+          <button type="button" data-ip="192.168.1.10" data-prefix="24" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-rose-50/80 hover:bg-royal-600 text-royal-800 hover:text-white dark:bg-rose-950/50 dark:hover:bg-royal-600 dark:text-rose-200 dark:hover:text-white border border-rose-200/80 dark:border-rose-900/70 transition-colors">
+            192.168.1.10/24
+          </button>
+          <button type="button" data-ip="10.0.0.0" data-prefix="30" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-rose-50/80 hover:bg-royal-600 text-royal-800 hover:text-white dark:bg-rose-950/50 dark:hover:bg-royal-600 dark:text-rose-200 dark:hover:text-white border border-rose-200/80 dark:border-rose-900/70 transition-colors">
+            10.0.0.0/30
+          </button>
+          <button type="button" data-ip="192.168.1.0" data-prefix="31" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-rose-50/80 hover:bg-royal-600 text-royal-800 hover:text-white dark:bg-rose-950/50 dark:hover:bg-royal-600 dark:text-rose-200 dark:hover:text-white border border-rose-200/80 dark:border-rose-900/70 transition-colors">
+            192.168.1.0/31 (RFC 3021)
+          </button>
+          <button type="button" data-ip="192.168.1.5" data-prefix="32" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-rose-50/80 hover:bg-royal-600 text-royal-800 hover:text-white dark:bg-rose-950/50 dark:hover:bg-royal-600 dark:text-rose-200 dark:hover:text-white border border-rose-200/80 dark:border-rose-900/70 transition-colors">
+            192.168.1.5/32
+          </button>
+        </div>
+
+        <form id="subnetForm" novalidate class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          <div class="lg:col-span-5 space-y-1.5">
+            <label for="ipInput" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Alamat IPv4
+            </label>
+            <div class="relative">
+              <input
+                type="text"
+                id="ipInput"
+                value=""
+                placeholder="Contoh: 172.16.5.130"
+                autocomplete="off"
+                spellcheck="false"
+                inputmode="decimal"
+                class="w-full font-mono text-base sm:text-lg font-medium px-4 py-2.5 pr-10 rounded-xl border border-slate-300 dark:border-rose-900/80 bg-[#fcf8fa] dark:bg-[#0e0a0c] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-royal-600 focus:border-royal-600 transition-all"
+              />
+            </div>
+            <p id="ipErrorMsg" role="alert" class="hidden text-xs font-medium text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800/80 rounded-lg px-3 py-2 flex items-start gap-1.5 mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span id="ipErrorText">Format IP tidak valid.</span>
+            </p>
+          </div>
+
+          <div class="lg:col-span-4 space-y-1.5">
+            <label for="prefixSelect" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Prefix CIDR (0–32)
+            </label>
+            <div class="relative">
+              <select
+                id="prefixSelect"
+                class="w-full appearance-none font-mono text-sm sm:text-base font-medium px-4 py-2.5 pr-10 rounded-xl border border-slate-300 dark:border-rose-900/80 bg-[#fcf8fa] dark:bg-[#0e0a0c] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-600 focus:border-royal-600 transition-all cursor-pointer"
+              >
+              </select>
+              <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-3 lg:pt-7">
+            <button
+              type="submit"
+              id="calculateBtn"
+              class="w-full py-2.5 px-5 rounded-xl font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-royal-700 to-royal-600 hover:from-royal-800 hover:to-royal-700 active:scale-[0.99] shadow-md shadow-royal-700/20 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-royal-600 focus:ring-offset-2 dark:focus:ring-offset-[#150f13]"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16" y2="18"></line>
+                <path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path>
+                <path d="M12 14h.01"></path><path d="M8 14h.01"></path>
+                <path d="M12 18h.01"></path><path d="M8 18h.01"></path>
+              </svg>
+              Hitung Subnet
+            </button>
+          </div>
+        </form>
+
+        <div class="pt-2 space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span class="font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+              Geser Prefix CIDR:
+              <span id="sliderPrefixBadge" class="font-mono font-bold px-2.5 py-0.5 rounded-md bg-royal-100 text-royal-800 dark:bg-royal-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70">
+                /24
+              </span>
+            </span>
+            <div class="flex items-center gap-3 font-mono text-xs">
+              <span class="inline-flex items-center gap-1.5 text-royal-700 dark:text-rose-400 font-semibold">
+                <span class="w-2 h-2 rounded-full bg-royal-600"></span>
+                <span id="netBitCountLabel">24 Bit Network</span>
+              </span>
+              <span class="text-slate-300 dark:text-slate-700">|</span>
+              <span class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 font-semibold">
+                <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                <span id="hostBitCountLabel">8 Bit Host</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="relative py-1">
+            <input
+              type="range"
+              id="prefixSlider"
+              min="0"
+              max="32"
+              value="24"
+              aria-label="Slider Prefix CIDR"
+              class="subnet-slider w-full rounded-lg"
+            />
+            <div class="flex justify-between text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-1 px-0.5 select-none">
+              <span>/0</span>
+              <span>/8</span>
+              <span>/16</span>
+              <span>/24</span>
+              <span>/32</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- State Kosong Subnet -->
+      <section id="subnetEmptyState" class="bg-white dark:bg-[#150f13] rounded-2xl border border-dashed border-rose-300 dark:border-rose-900/80 p-10 text-center space-y-3">
+        <div class="w-12 h-12 rounded-2xl bg-royal-50 dark:bg-royal-950/80 text-royal-700 dark:text-rose-400 flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-900">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </div>
+        <h2 class="font-display text-base font-bold text-slate-900 dark:text-white">
+          Siap Melakukan Analisis Subnet IPv4
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          Masukkan alamat IPv4 dan pilih prefix CIDR (0–32) di atas, atau klik salah satu <strong>Preset Uji</strong> untuk melihat hasil perhitungan lengkap.
+        </p>
+      </section>
+
+      <!-- State Sukses Subnet -->
+      <section id="resultsSection" class="hidden space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 p-5 shadow-sm hover:border-royal-400 dark:hover:border-rose-700 transition-colors flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-royal-700 dark:text-rose-400">
+                Network Address
+              </span>
+              <button type="button" data-copy-target="networkAddressVal" class="copy-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-royal-800 dark:text-rose-200 transition-colors">
+                <span>Salin</span>
+              </button>
+            </div>
+            <div>
+              <div id="networkAddressVal" class="font-mono text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight break-all">-</div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hasil operasi bitwise IP AND Mask</p>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 p-5 shadow-sm hover:border-royal-400 dark:hover:border-rose-700 transition-colors flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                Broadcast Address
+              </span>
+              <button type="button" data-copy-target="broadcastAddressVal" class="copy-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-royal-800 dark:text-rose-200 transition-colors">
+                <span>Salin</span>
+              </button>
+            </div>
+            <div>
+              <div id="broadcastAddressVal" class="font-mono text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight break-all">-</div>
+              <p id="broadcastSubtext" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Alamat siaran ke seluruh host</p>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 p-5 shadow-sm hover:border-royal-400 dark:hover:border-rose-700 transition-colors flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">
+                Range Host
+              </span>
+              <button type="button" data-copy-target="hostRangeVal" class="copy-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-royal-800 dark:text-rose-200 transition-colors">
+                <span>Salin</span>
+              </button>
+            </div>
+            <div>
+              <div id="hostRangeVal" class="font-mono text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug break-words">-</div>
+              <p id="hostRangeSubtext" class="text-xs text-slate-500 dark:text-slate-400 mt-1">First host – Last host valid</p>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 p-5 shadow-sm hover:border-royal-400 dark:hover:border-rose-700 transition-colors flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
+                Jumlah Host
+              </span>
+              <button type="button" data-copy-target="usableHostsVal" class="copy-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-royal-800 dark:text-rose-200 transition-colors">
+                <span>Salin</span>
+              </button>
+            </div>
+            <div>
+              <div class="flex items-baseline gap-2 flex-wrap">
+                <span id="usableHostsVal" class="font-mono text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">-</span>
+                <span id="usableHostsUnit" class="text-xs font-semibold text-teal-700 dark:text-teal-400">host valid</span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Total Alamat IP: <span id="totalIpsVal" class="font-mono font-semibold text-slate-700 dark:text-slate-300">-</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-5 bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 p-5 sm:p-6 shadow-sm space-y-4">
+            <div class="flex items-center gap-2 border-b border-rose-100 dark:border-rose-950/70 pb-3.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-royal-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <h2 class="font-display text-base font-bold text-slate-900 dark:text-white">
+                Parameter Teknis &amp; Klasifikasi
+              </h2>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-[#fcf8fa] dark:bg-[#0e0a0c] border border-rose-200/60 dark:border-rose-950 flex items-center justify-between gap-3">
+              <div>
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Subnet Mask</div>
+                <div id="subnetMaskVal" class="font-mono text-base font-bold text-slate-900 dark:text-white mt-0.5">-</div>
+              </div>
+              <button type="button" data-copy-target="subnetMaskVal" class="copy-btn inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-rose-50 dark:bg-[#1b1217] dark:hover:bg-rose-950/60 text-slate-700 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/70 transition-colors shrink-0">
+                <span>Salin</span>
+              </button>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-[#fcf8fa] dark:bg-[#0e0a0c] border border-rose-200/60 dark:border-rose-950 flex items-center justify-between gap-3">
+              <div>
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Wildcard Mask (ACL)</div>
+                <div id="wildcardMaskVal" class="font-mono text-base font-bold text-slate-900 dark:text-white mt-0.5">-</div>
+              </div>
+              <button type="button" data-copy-target="wildcardMaskVal" class="copy-btn inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-rose-50 dark:bg-[#1b1217] dark:hover:bg-rose-950/60 text-slate-700 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/70 transition-colors shrink-0">
+                <span>Salin</span>
+              </button>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-[#fcf8fa] dark:bg-[#0e0a0c] border border-rose-200/60 dark:border-rose-950 flex items-center justify-between gap-3">
+              <div>
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Notasi Network CIDR</div>
+                <div id="cidrNotationVal" class="font-mono text-base font-bold text-slate-900 dark:text-white mt-0.5">-</div>
+              </div>
+              <button type="button" data-copy-target="cidrNotationVal" class="copy-btn inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-rose-50 dark:bg-[#1b1217] dark:hover:bg-rose-950/60 text-slate-700 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/70 transition-colors shrink-0">
+                <span>Salin</span>
+              </button>
+            </div>
+
+            <div class="p-4 rounded-xl bg-[#fcf8fa] dark:bg-[#0e0a0c] border border-rose-200/60 dark:border-rose-950 space-y-2">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Klasifikasi Alamat IP</span>
+                <span id="ipClassBadge" class="px-2 py-0.5 rounded-md text-xs font-mono font-semibold bg-rose-100 text-royal-800 dark:bg-rose-950 dark:text-rose-300">-</span>
+              </div>
+              <div>
+                <span id="ipTypeBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold border">-</span>
+              </div>
+              <p id="ipTypeDesc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-0.5">-</p>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 p-5 sm:p-6 shadow-sm space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-rose-100 dark:border-rose-950/70 pb-3.5">
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-royal-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  <path d="M9 9h6v6H9z"></path>
+                  <path d="M9 1v3"></path><path d="M15 1v3"></path>
+                  <path d="M9 20v3"></path><path d="M15 20v3"></path>
+                </svg>
+                <h2 class="font-display text-base font-bold text-slate-900 dark:text-white">
+                  Visualisasi Biner 32-Bit
+                </h2>
+              </div>
+
+              <div class="flex items-center gap-3 text-xs font-medium">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-royal-50 text-royal-800 dark:bg-royal-950/90 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                  <span class="w-2.5 h-2.5 rounded-sm bg-royal-600"></span>
+                  Bit Network
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-50 text-teal-800 dark:bg-teal-950/90 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                  <span class="w-2.5 h-2.5 rounded-sm bg-teal-600"></span>
+                  Bit Host
+                </span>
+              </div>
+            </div>
+
+            <div id="binaryRowsContainer" class="space-y-3.5"></div>
+
+            <div class="p-3.5 rounded-xl bg-royal-50/70 dark:bg-royal-950/40 border border-rose-200/70 dark:border-rose-900/60 text-xs text-slate-600 dark:text-slate-300 leading-relaxed flex items-start gap-2.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-royal-700 dark:text-rose-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              <div>
+                <strong>Verifikasi Teori TKJ:</strong> Operasi bitwise <code class="font-mono px-1.5 py-0.5 rounded bg-white dark:bg-[#1b1217] text-royal-700 dark:text-rose-300 font-semibold">IP AND Subnet Mask</code> mempertahankan <span id="eduNetBits" class="font-semibold">24 bit pertama</span> sebagai identitas jaringan dan mengatur seluruh <span id="eduHostBits" class="font-semibold">8 bit terakhir</span> menjadi <code class="font-mono">0</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PANEL 2: MODE VLSM -->
+    <div id="panelVlsm" class="hidden space-y-6">
+      <section class="bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 shadow-sm p-5 sm:p-6 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-rose-100 dark:border-rose-950/70">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-royal-700 dark:text-rose-400 mr-1 flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              Contoh Soal VLSM:
+            </span>
+            <button type="button" id="vlsmPresetBtn" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-rose-50/80 hover:bg-royal-600 text-royal-800 hover:text-white dark:bg-rose-950/50 dark:hover:bg-royal-600 dark:text-rose-200 dark:hover:text-white border border-rose-200/80 dark:border-rose-900/70 transition-colors">
+              192.168.1.0/24 &rarr; [100, 50, 20, 2] host
+            </button>
+          </div>
+          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            Alokasi otomatis diurutkan dari kebutuhan terbesar (blok minimal /30)
+          </span>
+        </div>
+
+        <form id="vlsmForm" novalidate class="space-y-5">
+          <div class="max-w-md space-y-1.5">
+            <label for="vlsmNetworkInput" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Alamat Jaringan Induk (Network CIDR)
+            </label>
+            <input
+              type="text"
+              id="vlsmNetworkInput"
+              placeholder="Contoh: 192.168.1.0/24"
+              autocomplete="off"
+              spellcheck="false"
+              class="w-full font-mono text-base font-medium px-4 py-2.5 rounded-xl border border-slate-300 dark:border-rose-900/80 bg-[#fcf8fa] dark:bg-[#0e0a0c] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-royal-600 focus:border-royal-600 transition-all"
+            />
+          </div>
+
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Daftar Kebutuhan Host per Segmen
+              </label>
+              <button
+                type="button"
+                id="addHostRowBtn"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:hover:bg-rose-900/70 text-royal-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Tambah Segmen
+              </button>
+            </div>
+
+            <div id="vlsmRowsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </div>
+
+          <div id="vlsmErrorBox" role="alert" class="hidden text-xs sm:text-sm font-medium text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800/80 rounded-xl px-4 py-3 flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span id="vlsmErrorText">Terjadi kesalahan pada perhitungan VLSM.</span>
+          </div>
+
+          <div class="pt-1">
+            <button
+              type="submit"
+              class="px-6 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-royal-700 to-royal-600 hover:from-royal-800 hover:to-royal-700 active:scale-[0.99] shadow-md shadow-royal-700/20 transition-all inline-flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-royal-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3v18h18"></path>
+                <rect x="7" y="10" width="3" height="8" rx="1"></rect>
+                <rect x="12" y="6" width="3" height="12" rx="1"></rect>
+                <rect x="17" y="13" width="3" height="5" rx="1"></rect>
+              </svg>
+              Hitung Alokasi VLSM
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section id="vlsmEmptyState" class="bg-white dark:bg-[#150f13] rounded-2xl border border-dashed border-rose-300 dark:border-rose-900/80 p-10 text-center space-y-3">
+        <div class="w-12 h-12 rounded-2xl bg-royal-50 dark:bg-royal-950/80 text-royal-700 dark:text-rose-400 flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-900">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </div>
+        <h2 class="font-display text-base font-bold text-slate-900 dark:text-white">
+          Perencanaan Alokasi Subnet VLSM
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          Masukkan jaringan induk CIDR (misalnya <code class="font-mono">192.168.1.0/24</code>) dan jumlah host tiap segmen, lalu klik <strong>Hitung Alokasi VLSM</strong>.
+        </p>
+      </section>
+
+      <section id="vlsmResultSection" class="hidden bg-white dark:bg-[#150f13] rounded-2xl border border-rose-200/80 dark:border-rose-950/90 shadow-sm overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-rose-100 dark:border-rose-950/70 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="font-display text-base font-bold text-slate-900 dark:text-white">
+              Tabel Hasil Alokasi VLSM
+            </h2>
+            <p id="vlsmSummarySubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Diurutkan otomatis dari kebutuhan terbesar ke terkecil
+            </p>
+          </div>
+          <span class="px-3 py-1 rounded-lg text-xs font-mono font-semibold bg-royal-50 text-royal-800 dark:bg-royal-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80">
+            Blok Minimum: /30
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-rose-50/80 dark:bg-rose-950/50 text-royal-900 dark:text-rose-200 border-b border-rose-200/80 dark:border-rose-900/70 font-semibold">
+                <th class="py-3 px-4">No</th>
+                <th class="py-3 px-4">Kebutuhan</th>
+                <th class="py-3 px-4">Network CIDR</th>
+                <th class="py-3 px-4">Subnet Mask</th>
+                <th class="py-3 px-4">Range Host Valid</th>
+                <th class="py-3 px-4">Broadcast</th>
+                <th class="py-3 px-4">Usable Hosts</th>
+                <th class="py-3 px-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="vlsmTableBody" class="divide-y divide-rose-100 dark:divide-rose-950/70"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-rose-200/70 dark:border-rose-950/80 py-5 mt-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <p>Kalkulator Subnet &amp; VLSM IPv4 &bull; Standar Kurikulum SMK TKJ &amp; RFC 3021</p>
+      <p>Terintegrasi dengan FastAPI Backend &amp; SQA Test Suite</p>
+    </div>
+  </footer>
+
+  <div
+    id="copyToast"
+    role="status"
+    aria-live="polite"
+    class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-200 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-royal-900 dark:bg-rose-950 text-white text-xs sm:text-sm font-medium shadow-lg border border-rose-700/80"
+  >
+    <span class="w-5 h-5 rounded-full bg-rose-500/30 text-rose-200 flex items-center justify-center shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </span>
+    <span id="copyToastText">Berhasil disalin!</span>
+  </div>
+
+  <script>
+    const tabSubnetBtn = document.getElementById('tabSubnetBtn');
+    const tabVlsmBtn = document.getElementById('tabVlsmBtn');
+    const panelSubnet = document.getElementById('panelSubnet');
+    const panelVlsm = document.getElementById('panelVlsm');
+
+    const ipInput = document.getElementById('ipInput');
+    const prefixSelect = document.getElementById('prefixSelect');
+    const prefixSlider = document.getElementById('prefixSlider');
+    const subnetForm = document.getElementById('subnetForm');
+    const ipErrorMsg = document.getElementById('ipErrorMsg');
+    const ipErrorText = document.getElementById('ipErrorText');
+    const subnetEmptyState = document.getElementById('subnetEmptyState');
+    const resultsSection = document.getElementById('resultsSection');
+
+    const sliderPrefixBadge = document.getElementById('sliderPrefixBadge');
+    const netBitCountLabel = document.getElementById('netBitCountLabel');
+    const hostBitCountLabel = document.getElementById('hostBitCountLabel');
+
+    const networkAddressVal = document.getElementById('networkAddressVal');
+    const broadcastAddressVal = document.getElementById('broadcastAddressVal');
+    const broadcastSubtext = document.getElementById('broadcastSubtext');
+    const hostRangeVal = document.getElementById('hostRangeVal');
+    const hostRangeSubtext = document.getElementById('hostRangeSubtext');
+    const usableHostsVal = document.getElementById('usableHostsVal');
+    const usableHostsUnit = document.getElementById('usableHostsUnit');
+    const totalIpsVal = document.getElementById('totalIpsVal');
+
+    const subnetMaskVal = document.getElementById('subnetMaskVal');
+    const wildcardMaskVal = document.getElementById('wildcardMaskVal');
+    const cidrNotationVal = document.getElementById('cidrNotationVal');
+    const ipClassBadge = document.getElementById('ipClassBadge');
+    const ipTypeBadge = document.getElementById('ipTypeBadge');
+    const ipTypeDesc = document.getElementById('ipTypeDesc');
+
+    const binaryRowsContainer = document.getElementById('binaryRowsContainer');
+    const eduNetBits = document.getElementById('eduNetBits');
+    const eduHostBits = document.getElementById('eduHostBits');
+
+    const vlsmForm = document.getElementById('vlsmForm');
+    const vlsmNetworkInput = document.getElementById('vlsmNetworkInput');
+    const vlsmRowsContainer = document.getElementById('vlsmRowsContainer');
+    const addHostRowBtn = document.getElementById('addHostRowBtn');
+    const vlsmPresetBtn = document.getElementById('vlsmPresetBtn');
+    const vlsmErrorBox = document.getElementById('vlsmErrorBox');
+    const vlsmErrorText = document.getElementById('vlsmErrorText');
+    const vlsmEmptyState = document.getElementById('vlsmEmptyState');
+    const vlsmResultSection = document.getElementById('vlsmResultSection');
+    const vlsmTableBody = document.getElementById('vlsmTableBody');
+    const vlsmSummarySubtitle = document.getElementById('vlsmSummarySubtitle');
+
+    const copyToast = document.getElementById('copyToast');
+    const copyToastText = document.getElementById('copyToastText');
+    const themeToggle = document.getElementById('themeToggle');
+    let toastTimeout = null;
+
+    function switchTab(mode) {
+      const isSubnet = mode === 'subnet';
+      tabSubnetBtn.setAttribute('aria-selected', String(isSubnet));
+      tabVlsmBtn.setAttribute('aria-selected', String(!isSubnet));
+
+      if (isSubnet) {
+        tabSubnetBtn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-royal-700 text-white shadow-sm';
+        tabVlsmBtn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-royal-700 dark:hover:text-rose-300';
+        panelSubnet.classList.remove('hidden');
+        panelVlsm.classList.add('hidden');
+      } else {
+        tabVlsmBtn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-royal-700 text-white shadow-sm';
+        tabSubnetBtn.className = 'px-3.5 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-royal-700 dark:hover:text-rose-300';
+        panelVlsm.classList.remove('hidden');
+        panelSubnet.classList.add('hidden');
+      }
+    }
+
+    tabSubnetBtn.addEventListener('click', () => switchTab('subnet'));
+    tabVlsmBtn.addEventListener('click', () => switchTab('vlsm'));
+
+    function prefixToMaskInt(prefix) {
+      if (prefix === 0) return 0;
+      return (~0 << (32 - prefix)) >>> 0;
+    }
+
+    function intToIp(intVal) {
+      return [
+        (intVal >>> 24) & 255,
+        (intVal >>> 16) & 255,
+        (intVal >>> 8) & 255,
+        intVal & 255
+      ].join('.');
+    }
+
+    function ipToInt(ipStr) {
+      if (typeof ipStr !== 'string' || !ipStr || ipStr !== ipStr.trim() || ipStr.includes(' ')) {
+        throw new Error('Alamat IPv4 tidak boleh kosong atau mengandung spasi.');
+      }
+      const parts = ipStr.split('.');
+      if (parts.length !== 4) {
+        throw new Error('Alamat IPv4 harus terdiri dari tepat 4 oktet.');
+      }
+      let res = 0;
+      for (const part of parts) {
+        if (!/^[0-9]+$/.test(part)) {
+          throw new Error(`Oktet "${part}" harus berupa bilangan bulat.`);
+        }
+        if (part.length > 1 && part.startsWith('0')) {
+          throw new Error(`Oktet "${part}" tidak boleh diawali angka nol (leading zero).`);
+        }
+        const num = Number(part);
+        if (num < 0 || num > 255) {
+          throw new Error(`Oktet "${part}" harus bernilai antara 0 hingga 255.`);
+        }
+        res = ((res << 8) | num) >>> 0;
+      }
+      return res;
+    }
+
+    function intToBinary32(intVal) {
+      return (intVal >>> 0).toString(2).padStart(32, '0');
+    }
+
+    function formatNumberID(num) {
+      return num.toLocaleString('id-ID');
+    }
+
+    function hitungSubnetLokal(ip, prefix) {
+      const ipInt = ipToInt(ip);
+      if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
+        throw new Error('Prefix harus berupa bilangan bulat antara 0 hingga 32.');
+      }
+      const maskInt = prefixToMaskInt(prefix);
+      const networkInt = (ipInt & maskInt) >>> 0;
+      const mask = intToIp(maskInt);
+      const network = intToIp(networkInt);
+
+      if (prefix === 31) {
+        return {
+          mask,
+          network,
+          broadcast: null,
+          first_host: network,
+          last_host: intToIp((networkInt + 1) >>> 0),
+          usable_hosts: 2
+        };
+      }
+      if (prefix === 32) {
+        return {
+          mask,
+          network,
+          broadcast: null,
+          first_host: ip,
+          last_host: ip,
+          usable_hosts: 1
+        };
+      }
+      const broadcastInt = (networkInt | (~maskInt >>> 0)) >>> 0;
+      return {
+        mask,
+        network,
+        broadcast: intToIp(broadcastInt),
+        first_host: intToIp((networkInt + 1) >>> 0),
+        last_host: intToIp((broadcastInt - 1) >>> 0),
+        usable_hosts: Math.pow(2, 32 - prefix) - 2
+      };
+    }
+
+    function alokasiVlsmLokal(networkCidr, kebutuhanHost) {
+      if (!networkCidr || !networkCidr.includes('/') || networkCidr !== networkCidr.trim()) {
+        throw new Error('Format network CIDR harus berupa <ip>/<prefix>.');
+      }
+      const [ipStr, prefStr] = networkCidr.split('/');
+      const ipInt = ipToInt(ipStr);
+      if (!/^[0-9]+$/.test(prefStr) || (prefStr.length > 1 && prefStr.startsWith('0'))) {
+        throw new Error('Prefix CIDR tidak valid.');
+      }
+      const parentPrefix = Number(prefStr);
+      if (parentPrefix < 0 || parentPrefix > 32) {
+        throw new Error('Prefix CIDR harus antara 0 hingga 32.');
+      }
+      const parentMask = prefixToMaskInt(parentPrefix);
+      if (((ipInt & parentMask) >>> 0) !== ipInt) {
+        throw new Error('Alamat CIDR induk bukan merupakan alamat network yang valid.');
+      }
+      if (!Array.isArray(kebutuhanHost) || kebutuhanHost.length === 0) {
+        throw new Error('Daftar kebutuhan host tidak boleh kosong.');
+      }
+      for (const h of kebutuhanHost) {
+        if (!Number.isInteger(h) || h < 1) {
+          throw new Error('Setiap kebutuhan host harus berupa bilangan bulat minimal 1.');
+        }
+      }
+      const totalParent = Math.pow(2, 32 - parentPrefix);
+      const endParent = ipInt + totalParent - 1;
+      const sorted = [...kebutuhanHost].sort((a, b) => b - a);
+      const hasil = [];
+      let cur = ipInt;
+
+      for (const keb of sorted) {
+        let hostBits = 2;
+        while (Math.pow(2, hostBits) < keb + 2) hostBits++;
+        const newPref = 32 - hostBits;
+        const blockSize = Math.pow(2, hostBits);
+        if (newPref < parentPrefix || cur + blockSize - 1 > endParent) {
+          throw new Error('Kapasitas blok jaringan induk tidak cukup menampung seluruh kebutuhan.');
+        }
+        const subIp = intToIp(cur >>> 0);
+        const info = hitungSubnetLokal(subIp, newPref);
+        hasil.push({
+          kebutuhan: keb,
+          network_cidr: `${subIp}/${newPref}`,
+          ...info
+        });
+        cur += blockSize;
+      }
+      return hasil;
+    }
+
+    function classifyIPv4(ipStr) {
+      const [o1, o2] = ipStr.split('.').map(Number);
+      let ipClass = 'Kelas A';
+      if (o1 >= 1 && o1 <= 126) ipClass = 'Kelas A';
+      else if (o1 === 127) ipClass = 'Kelas A (Loopback)';
+      else if (o1 >= 128 && o1 <= 191) ipClass = 'Kelas B';
+      else if (o1 >= 192 && o1 <= 223) ipClass = 'Kelas C';
+      else if (o1 >= 224 && o1 <= 239) ipClass = 'Kelas D (Multicast)';
+      else if (o1 >= 240) ipClass = 'Kelas E (Reserved)';
+      else ipClass = 'Default / Reserved';
+
+      if (o1 === 127) {
+        return {
+          ipClass,
+          type: 'Loopback (RFC 1122)',
+          badgeClass: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+          desc: 'Alamat internal perangkat (localhost) untuk pengujian stack jaringan lokal.'
+        };
+      }
+      if (o1 === 10 || (o1 === 172 && o2 >= 16 && o2 <= 31) || (o1 === 192 && o2 === 168)) {
+        return {
+          ipClass,
+          type: 'Private (RFC 1918)',
+          badgeClass: 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+          desc: 'Digunakan untuk jaringan lokal (LAN) internal dan memerlukan NAT menuju internet.'
+        };
+      }
+      if (o1 === 169 && o2 === 254) {
+        return {
+          ipClass,
+          type: 'Link-Local / APIPA (RFC 3927)',
+          badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+          desc: 'Alamat otomatis saat perangkat tidak memperoleh konfigurasi dari server DHCP.'
+        };
+      }
+      if (o1 >= 224 && o1 <= 239) {
+        return {
+          ipClass,
+          type: 'Multicast (RFC 5771)',
+          badgeClass: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800',
+          desc: 'Digunakan untuk komunikasi grup satu-ke-banyak seperti protokol routing OSPF/RIP.'
+        };
+      }
+      return {
+        ipClass,
+        type: 'Public / Global Routable',
+        badgeClass: 'bg-royal-100 text-royal-800 dark:bg-royal-950 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+        desc: 'Alamat IP unik global yang dapat dirutekan langsung pada jaringan internet publik.'
+      };
+    }
+
+    function renderBinaryVisualization(rows, prefix) {
+      binaryRowsContainer.innerHTML = '';
+
+      rows.forEach((row) => {
+        const binStr = intToBinary32(row.intVal);
+        const dottedBin = [
+          binStr.slice(0, 8),
+          binStr.slice(8, 16),
+          binStr.slice(16, 24),
+          binStr.slice(24, 32)
+        ].join('.');
+
+        const rowWrapper = document.createElement('div');
+        rowWrapper.className = 'p-3.5 rounded-xl bg-[#fcf8fa] dark:bg-[#0e0a0c] border border-rose-200/60 dark:border-rose-950 space-y-2.5';
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'flex items-center justify-between gap-2 flex-wrap';
+        headerDiv.innerHTML = `
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">${row.label}</span>
+            <span class="font-mono text-xs px-2 py-0.5 rounded bg-white dark:bg-[#1b1217] border border-rose-200/70 dark:border-rose-900/70 text-slate-600 dark:text-rose-200">
+              ${row.ipStr}
+            </span>
+          </div>
+          <button
+            type="button"
+            data-copy-raw="${dottedBin}"
+            class="copy-btn inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-white hover:bg-rose-50 dark:bg-[#1b1217] dark:hover:bg-rose-950/60 text-slate-600 dark:text-rose-200 border border-rose-200/80 dark:border-rose-900/70 transition-colors"
+          >
+            <span>Salin Biner</span>
+          </button>
+        `;
+
+        const octetsGrid = document.createElement('div');
+        octetsGrid.className = 'grid grid-cols-2 sm:grid-cols-4 gap-2';
+
+        for (let octetIdx = 0; octetIdx < 4; octetIdx++) {
+          const octetBox = document.createElement('div');
+          octetBox.className = 'flex items-center justify-center gap-[2px] p-1.5 rounded-lg bg-white dark:bg-[#150f13] border border-rose-200/60 dark:border-rose-950';
+
+          for (let bitInOctet = 0; bitInOctet < 8; bitInOctet++) {
+            const globalBitIdx = octetIdx * 8 + bitInOctet;
+            const bitChar = binStr[globalBitIdx];
+            const isNetworkBit = globalBitIdx < prefix;
+
+            const bitSpan = document.createElement('span');
+            bitSpan.textContent = bitChar;
+            bitSpan.title = `Bit ke-${globalBitIdx + 1} (${isNetworkBit ? 'Network' : 'Host'})`;
+
+            if (isNetworkBit) {
+              bitSpan.className =
+                'w-3.5 sm:w-4 h-5 flex items-center justify-center rounded text-[11px] font-mono font-bold ' +
+                (bitChar === '1'
+                  ? 'bg-royal-700 text-white dark:bg-royal-600'
+                  : 'bg-rose-100 text-royal-800 dark:bg-rose-950/90 dark:text-rose-300');
+            } else {
+              bitSpan.className =
+                'w-3.5 sm:w-4 h-5 flex items-center justify-center rounded text-[11px] font-mono font-bold ' +
+                (bitChar === '1'
+                  ? 'bg-teal-600 text-white dark:bg-teal-500'
+                  : 'bg-teal-100/80 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300');
+            }
+
+            octetBox.appendChild(bitSpan);
+          }
+          octetsGrid.appendChild(octetBox);
+        }
+
+        rowWrapper.appendChild(headerDiv);
+        rowWrapper.appendChild(octetsGrid);
+        binaryRowsContainer.appendChild(rowWrapper);
+      });
+    }
+
+    function syncSliderVisual(prefix) {
+      prefixSlider.value = prefix;
+      sliderPrefixBadge.textContent = `/${prefix}`;
+      netBitCountLabel.textContent = `${prefix} Bit Network`;
+      hostBitCountLabel.textContent = `${32 - prefix} Bit Host`;
+      eduNetBits.textContent = `${prefix} bit pertama`;
+      eduHostBits.textContent = `${32 - prefix} bit terakhir`;
+
+      const percentage = (prefix / 32) * 100;
+      const isDark = document.documentElement.classList.contains('dark');
+      const trackEmpty = isDark ? '#2d1a24' : '#fce7f3';
+      const trackFill = isDark ? '#f43f6e' : '#be185d';
+      prefixSlider.style.background = `linear-gradient(to right, ${trackFill} 0%, ${trackFill} ${percentage}%, ${trackEmpty} ${percentage}%, ${trackEmpty} 100%)`;
+      prefixSlider.style.height = '0.5rem';
+      prefixSlider.style.borderRadius = '9999px';
+    }
+
+    async function submitSubnetCalculation() {
+      const ip = ipInput.value;
+      const prefix = parseInt(prefixSelect.value, 10);
+      syncSliderVisual(prefix);
+
+      let data = null;
+      try {
+        if (window.location.protocol.startsWith('http')) {
+          const params = new URLSearchParams({ ip, prefix: String(prefix) });
+          const resp = await fetch(`/api/subnet?${params.toString()}`);
+          const json = await resp.json();
+          if (!resp.ok) {
+            throw new Error(json.detail || 'Input subnet tidak valid.');
+          }
+          data = json;
+        } else {
+          data = hitungSubnetLokal(ip, prefix);
+        }
+      } catch (err) {
+        ipErrorText.textContent = err.message;
+        ipErrorMsg.classList.remove('hidden');
+        ipInput.classList.add('border-rose-600', 'ring-2', 'ring-rose-500/20');
+        resultsSection.classList.add('hidden');
+        subnetEmptyState.classList.add('hidden');
+        return;
+      }
+
+      ipErrorMsg.classList.add('hidden');
+      ipInput.classList.remove('border-rose-600', 'ring-2', 'ring-rose-500/20');
+      subnetEmptyState.classList.add('hidden');
+      resultsSection.classList.remove('hidden');
+
+      const ipInt = ipToInt(ip);
+      const maskInt = prefixToMaskInt(prefix);
+      const wildcardInt = (~maskInt) >>> 0;
+      const networkInt = ipToInt(data.network);
+      const broadcastInt = data.broadcast ? ipToInt(data.broadcast) : (networkInt | wildcardInt) >>> 0;
+      const totalIps = Math.pow(2, 32 - prefix);
+
+      networkAddressVal.textContent = data.network;
+
+      if (data.broadcast === null) {
+        broadcastAddressVal.textContent = 'Tidak Ada';
+        broadcastSubtext.textContent = prefix === 31 ? 'Point-to-Point RFC 3021 (tanpa broadcast)' : 'Host tunggal /32 (tanpa broadcast)';
+      } else {
+        broadcastAddressVal.textContent = data.broadcast;
+        broadcastSubtext.textContent = 'Alamat siaran ke seluruh host';
+      }
+
+      if (prefix === 32) {
+        hostRangeVal.textContent = data.first_host;
+        hostRangeSubtext.textContent = 'Rute host tunggal (/32)';
+        usableHostsUnit.textContent = 'host tunggal (/32)';
+      } else if (prefix === 31) {
+        hostRangeVal.textContent = `${data.first_host} - ${data.last_host}`;
+        hostRangeSubtext.textContent = 'Link Point-to-Point (RFC 3021)';
+        usableHostsUnit.textContent = 'host (RFC 3021)';
+      } else {
+        hostRangeVal.textContent = `${data.first_host} - ${data.last_host}`;
+        hostRangeSubtext.textContent = 'First host – Last host valid';
+        usableHostsUnit.textContent = 'host valid';
+      }
+
+      usableHostsVal.textContent = formatNumberID(data.usable_hosts);
+      totalIpsVal.textContent = formatNumberID(totalIps);
+
+      subnetMaskVal.textContent = data.mask;
+      wildcardMaskVal.textContent = intToIp(wildcardInt);
+      cidrNotationVal.textContent = `${data.network}/${prefix}`;
+
+      const classification = classifyIPv4(ip);
+      ipClassBadge.textContent = classification.ipClass;
+      ipTypeBadge.textContent = classification.type;
+      ipTypeBadge.className = `inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold border ${classification.badgeClass}`;
+      ipTypeDesc.textContent = classification.desc;
+
+      const binaryRows = [
+        { label: 'IP Address', ipStr: ip, intVal: ipInt },
+        { label: 'Subnet Mask', ipStr: data.mask, intVal: maskInt },
+        { label: 'Network Address', ipStr: data.network, intVal: networkInt }
+      ];
+      if (data.broadcast !== null) {
+        binaryRows.push({ label: 'Broadcast Address', ipStr: data.broadcast, intVal: broadcastInt });
+      }
+      renderBinaryVisualization(binaryRows, prefix);
+    }
+
+    function createVlsmRequirementRow(initialVal = '') {
+      const idx = vlsmRowsContainer.children.length + 1;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'flex items-center gap-2 p-2.5 rounded-xl bg-[#fcf8fa] dark:bg-[#0e0a0c] border border-rose-200/80 dark:border-rose-900/70';
+
+      const badge = document.createElement('span');
+      badge.className = 'px-2 py-1 rounded-md text-xs font-mono font-bold bg-royal-100 text-royal-800 dark:bg-royal-950 dark:text-rose-300 shrink-0';
+      badge.textContent = `#${idx}`;
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '1';
+      input.placeholder = 'Jumlah host (mis. 50)';
+      input.value = initialVal;
+      input.className = 'vlsm-host-input w-full font-mono text-sm font-medium px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-rose-900/80 bg-white dark:bg-[#150f13] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-600';
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.title = 'Hapus segmen';
+      delBtn.className = 'p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-100/70 dark:hover:bg-rose-950/70 transition-colors shrink-0';
+      delBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+        </svg>
+      `;
+      delBtn.addEventListener('click', () => {
+        if (vlsmRowsContainer.children.length > 1) {
+          wrapper.remove();
+          Array.from(vlsmRowsContainer.children).forEach((el, i) => {
+            el.querySelector('span').textContent = `#${i + 1}`;
+          });
+        }
+      });
+
+      wrapper.appendChild(badge);
+      wrapper.appendChild(input);
+      wrapper.appendChild(delBtn);
+      vlsmRowsContainer.appendChild(wrapper);
+    }
+
+    createVlsmRequirementRow('');
+    createVlsmRequirementRow('');
+    createVlsmRequirementRow('');
+
+    addHostRowBtn.addEventListener('click', () => createVlsmRequirementRow(''));
+
+    vlsmPresetBtn.addEventListener('click', () => {
+      vlsmNetworkInput.value = '192.168.1.0/24';
+      vlsmRowsContainer.innerHTML = '';
+      [100, 50, 20, 2].forEach((val) => createVlsmRequirementRow(String(val)));
+      vlsmForm.dispatchEvent(new Event('submit'));
+    });
+
+    vlsmForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const network = vlsmNetworkInput.value;
+      const hostInputs = Array.from(document.querySelectorAll('.vlsm-host-input'));
+      const kebutuhanHost = hostInputs.map((el) => {
+        const raw = el.value.trim();
+        return raw === '' ? 0 : Number(raw);
+      });
+
+      let allocations = null;
+      try {
+        if (window.location.protocol.startsWith('http')) {
+          const resp = await fetch('/api/vlsm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ network, kebutuhan_host: kebutuhanHost })
+          });
+          const json = await resp.json();
+          if (!resp.ok) {
+            throw new Error(json.detail || 'Perhitungan VLSM gagal.');
+          }
+          allocations = json;
+        } else {
+          allocations = alokasiVlsmLokal(network, kebutuhanHost);
+        }
+      } catch (err) {
+        vlsmErrorText.textContent = err.message;
+        vlsmErrorBox.classList.remove('hidden');
+        vlsmResultSection.classList.add('hidden');
+        vlsmEmptyState.classList.add('hidden');
+        return;
+      }
+
+      vlsmErrorBox.classList.add('hidden');
+      vlsmEmptyState.classList.add('hidden');
+      vlsmResultSection.classList.remove('hidden');
+
+      vlsmSummarySubtitle.textContent = `Jaringan induk ${network} berhasil dibagi menjadi ${allocations.length} blok subnet berurutan`;
+      vlsmTableBody.innerHTML = '';
+
+      allocations.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-colors';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">${idx + 1}</td>
+          <td class="py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200">${item.kebutuhan} host</td>
+          <td class="py-3 px-4 font-mono font-bold text-royal-700 dark:text-rose-400">${item.network_cidr}</td>
+          <td class="py-3 px-4 font-mono text-slate-700 dark:text-slate-300">${item.mask}</td>
+          <td class="py-3 px-4 font-mono text-teal-700 dark:text-teal-400 font-medium">${item.first_host} – ${item.last_host}</td>
+          <td class="py-3 px-4 font-mono text-slate-700 dark:text-slate-300">${item.broadcast ?? '-'}</td>
+          <td class="py-3 px-4 font-mono font-semibold text-slate-900 dark:text-white">${item.usable_hosts}</td>
+          <td class="py-3 px-4 text-right">
+            <button
+              type="button"
+              data-copy-raw="${item.network_cidr}"
+              class="copy-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:hover:bg-rose-900/70 text-royal-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800/70 transition-colors"
+            >
+              Salin CIDR
+            </button>
+          </td>
+        `;
+        vlsmTableBody.appendChild(tr);
+      });
+    });
+
+    function populatePrefixDropdown() {
+      prefixSelect.innerHTML = '';
+      for (let p = 0; p <= 32; p++) {
+        const maskStr = intToIp(prefixToMaskInt(p));
+        const option = document.createElement('option');
+        option.value = p;
+        option.textContent = `/${p} — ${maskStr}`;
+        if (p === 24) option.selected = true;
+        prefixSelect.appendChild(option);
+      }
+    }
+
+    function copyTextToClipboard(text, buttonEl) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+
+      let success = false;
+      try {
+        success = document.execCommand('copy');
+      } catch (e) {
+        success = false;
+      }
+      document.body.removeChild(textarea);
+
+      if (success) {
+        if (buttonEl) {
+          const originalHTML = buttonEl.innerHTML;
+          buttonEl.innerHTML = `<span class="text-royal-700 dark:text-rose-300 font-semibold">Tersalin</span>`;
+          setTimeout(() => {
+            buttonEl.innerHTML = originalHTML;
+          }, 1400);
+        }
+        copyToastText.textContent = `Disalin: ${text}`;
+        copyToast.classList.remove('opacity-0', 'translate-y-3');
+        copyToast.classList.add('opacity-100', 'translate-y-0');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          copyToast.classList.add('opacity-0', 'translate-y-3');
+          copyToast.classList.remove('opacity-100', 'translate-y-0');
+        }, 2200);
+      }
+    }
+
+    subnetForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitSubnetCalculation();
+    });
+
+    prefixSelect.addEventListener('change', () => {
+      syncSliderVisual(parseInt(prefixSelect.value, 10));
+      if (ipInput.value.trim()) submitSubnetCalculation();
+    });
+
+    prefixSlider.addEventListener('input', () => {
+      prefixSelect.value = prefixSlider.value;
+      syncSliderVisual(parseInt(prefixSlider.value, 10));
+      if (ipInput.value.trim()) submitSubnetCalculation();
+    });
+
+    document.querySelectorAll('.preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        ipInput.value = btn.getAttribute('data-ip');
+        const p = btn.getAttribute('data-prefix');
+        prefixSelect.value = p;
+        syncSliderVisual(parseInt(p, 10));
+        submitSubnetCalculation();
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const copyBtn = e.target.closest('.copy-btn');
+      if (!copyBtn) return;
+      const targetId = copyBtn.getAttribute('data-copy-target');
+      const rawText = copyBtn.getAttribute('data-copy-raw');
+      if (targetId) {
+        const el = document.getElementById(targetId);
+        if (el) copyTextToClipboard(el.textContent.trim(), copyBtn);
+      } else if (rawText) {
+        copyTextToClipboard(rawText, copyBtn);
+      }
+    });
+
+    function initTheme() {
+      const saved = localStorage.getItem('subnet-pink-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('subnet-pink-theme', isDark ? 'dark' : 'light');
+      syncSliderVisual(parseInt(prefixSelect.value, 10));
+    });
+
+    initTheme();
+    populatePrefixDropdown();
+    syncSliderVisual(24);
+  </script>
+</body>
+</html>
